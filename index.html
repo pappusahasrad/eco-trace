@@ -233,7 +233,6 @@
     // --- AI INTEGRATION ---
     async function callGemini(prompt) {
         const key = apiKeyInput.value.trim();
-        if (!key) { aiResponse.innerText = "Please enter an API Key first!"; return; }
         
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
         aiResponse.innerText = "Processing with Gemini AI...";
@@ -270,3 +269,4 @@
 </script>
 </body>
 </html>
+
