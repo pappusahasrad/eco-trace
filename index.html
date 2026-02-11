@@ -1,272 +1,95 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <title>EcoTrace — AI Food Waste Auditor</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoTrace - AI Food Waste Tracker</title>
     <style>
         :root {
             --primary: #2e7d32;
-            --bg: #f0f4f0;
-            --card: #ffffff;
-            --text: #333;
-            --accent: #81c784;
+            --bg: #f8f9fa;
         }
-
-        body { 
-            background-color: var(--bg); 
-            color: var(--text);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .dashboard {
-            background: var(--card);
-            max-width: 1000px;
-            width: 100%;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            padding: 40px;
-        }
-
-        h2 { color: var(--primary); font-size: 2rem; margin-top: 0; border-bottom: 3px solid var(--bg); padding-bottom: 15px; }
-        
-        .row { display: flex; gap: 25px; margin-bottom: 25px; flex-wrap: wrap; }
-        .col { flex: 1; min-width: 300px; }
-
-        /* Drag & Drop Zone */
-        #dropZone {
-            border: 3px dashed var(--accent);
-            padding: 40px;
-            text-align: center;
-            border-radius: 12px;
-            background: #f9fff9;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-bottom: 15px;
-        }
-        #dropZone:hover { background: #e8f5e9; border-color: var(--primary); }
-
-        textarea { 
-            width: 100%; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            padding: 10px; 
-            font-family: monospace;
-            resize: vertical;
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-right: 10px;
-        }
-        button:hover { background: #1b5e20; transform: translateY(-2px); }
-        button.secondary { background: #666; }
-
-        .stats-box {
-            background: var(--bg);
-            padding: 20px;
-            border-radius: 10px;
-            min-height: 200px;
-        }
-
-        pre#aiResponse {
-            background: #263238;
-            color: #80cbc4;
-            padding: 20px;
-            border-radius: 10px;
-            white-space: pre-wrap;
-            font-size: 0.95rem;
-            border-left: 6px solid var(--primary);
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        canvas { margin-top: 20px; max-height: 250px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: var(--primary); text-align: center; }
+        .input-section { margin-bottom: 20px; }
+        textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; resize: none; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; transition: opacity 0.2s; }
+        .btn-predict { background: #1565c0; }
+        .btn-impact { background: #2e7d32; }
+        button:hover { opacity: 0.9; }
+        #ai-response { margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; min-height: 50px; white-space: pre-wrap; line-height: 1.5; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-<div class="dashboard">
-    <h2>EcoTrace — School Food Auditor</h2>
+<div class="container">
+    <h1>EcoTrace AI</h1>
+    <p>Enter your inventory or food waste data below to get AI-powered insights.</p>
 
-    <div class="row">
-        <div class="col">
-            <div id="dropZone">
-                <strong>Drag & Drop Waste JSON/CSV here</strong><br>
-                <span style="font-size: 0.8em; color: #666;">or click to browse files</span>
-                <input type="file" id="fileInput" hidden accept=".csv,.json" />
-            </div>
-            
-            <label><strong>Manual Data Entry (CSV/JSON)</strong></label>
-            <textarea id="dataInput" rows="6" placeholder="date,item,weight_lbs&#10;2026-02-10,Broccoli,15"></textarea>
-            
-            <div style="margin-top:15px;">
-                <button id="parseBtn">Analyze Locally</button>
-                <button id="clearBtn" class="secondary">Clear All</button>
-            </div>
-        </div>
-
-        <div class="col">
-            <div class="stats-box">
-                <div id="totals"><strong>No data processed yet.</strong></div>
-                <canvas id="chart"></canvas>
-            </div>
+    <div class="input-section">
+        <textarea id="userInput" placeholder="Example: 50 lbs of tomatoes expiring Friday, 20 gallons of milk wasted last week..."></textarea>
+        <div class="btn-group">
+            <button class="btn-predict" onclick="handleAction('predict')">Predictive Ordering</button>
+            <button class="btn-impact" onclick="handleAction('impact')">Waste Impact Report</button>
         </div>
     </div>
 
-    <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
-
-    <h3>AI Smart Features</h3>
-    <div class="row">
-        <div class="col">
-            <label><strong>Gemini API Key</strong></label>
-            <input id="apiKey" type="text" placeholder="Paste your Gemini API Key here" />
-            
-            <button id="predictBtn">Predictive Ordering</button>
-            <button id="reportBtn">Generate Impact Report</button>
-        </div>
-        <div class="col">
-            <label><strong>AI Insights</strong></label>
-            <pre id="aiResponse">The AI analysis will appear here once you click an action above...</pre>
-        </div>
-    </div>
+    <div id="ai-response">Your AI insights will appear here...</div>
 </div>
 
 <script>
-    const dataInput = document.getElementById('dataInput');
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const parseBtn = document.getElementById('parseBtn');
-    const totalsDiv = document.getElementById('totals');
-    const aiResponse = document.getElementById('aiResponse');
-    const apiKeyInput = document.getElementById('apiKey');
-    
-    let currentData = [];
-    let myChart = null;
+    async function handleAction(type) {
+        const input = document.getElementById('userInput').value;
+        const display = document.getElementById('ai-response');
 
-    // --- FILE HANDLING ---
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.background = "#e8f5e9"; });
-    dropZone.addEventListener('dragleave', () => dropZone.style.background = "#f9fff9");
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files[0];
-        handleFile(file);
-    });
-    fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
-
-    function handleFile(file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            dataInput.value = e.target.result;
-            parseData();
-        };
-        reader.readAsText(file);
-    }
-
-    // --- DATA PROCESSING ---
-    function parseData() {
-        const text = dataInput.value.trim();
-        if(!text) return;
-        
-        let parsed = [];
-        try { 
-            parsed = JSON.parse(text); 
-        } catch(e) {
-            // Basic CSV fallback
-            const lines = text.split('\n').filter(l => l.includes(','));
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-            parsed = lines.slice(1).map(line => {
-                const cols = line.split(',');
-                return { date: cols[0], item: cols[1], weight: parseFloat(cols[2]) || 0 };
-            });
+        if (!input.trim()) {
+            alert("Please enter some data first!");
+            return;
         }
-        
-        currentData = parsed;
-        updateUI();
+
+        let prompt = "";
+        if (type === 'predict') {
+            prompt = `Based on this food data: "${input}", provide a smart ordering plan to reduce future waste. Use bullet points.`;
+        } else {
+            prompt = `Analyze the environmental impact (CO2, water, money) for this waste: "${input}". Be concise.`;
+        }
+
+        // Call our internal Vercel API
+        await callGemini(prompt);
     }
 
-    function updateUI() {
-        const totalWeight = currentData.reduce((sum, entry) => sum + entry.weight, 0);
-        totalsDiv.innerHTML = `
-            <p style="font-size: 1.2rem; margin-bottom: 5px;"><strong>Total Waste:</strong> ${totalWeight.toFixed(1)} lbs</p>
-            <p><strong>Entries Found:</strong> ${currentData.length}</p>
-        `;
-        
-        // Group data for chart
-        const groups = {};
-        currentData.forEach(d => groups[d.item] = (groups[d.item] || 0) + d.weight);
-        
-        const labels = Object.keys(groups);
-        const values = Object.values(groups);
-
-        if (myChart) myChart.destroy();
-        const ctx = document.getElementById('chart').getContext('2d');
-        myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{ label: 'Lbs Wasted', data: values, backgroundColor: '#4caf50' }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-
-    // --- AI INTEGRATION ---
     async function callGemini(prompt) {
-        const key = apiKeyInput.value.trim();
-        
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
-        aiResponse.innerText = "Processing with Gemini AI...";
-
-        const payload = {
-            contents: [{
-                parts: [{ text: `${prompt}\n\nHere is the data: ${JSON.stringify(currentData)}` }]
-            }]
-        };
+        const display = document.getElementById('ai-response');
+        display.innerText = "EcoTrace AI is calculating...";
 
         try {
-            const res = await fetch(url, { method: "POST", body: JSON.stringify(payload) });
-            const json = await res.json();
-            const text = json.candidates[0].content.parts[0].text;
-            aiResponse.innerText = text;
-        } catch (err) {
-            aiResponse.innerText = "Error: " + err.message;
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+
+            const data = await response.json();
+
+            // SAFETY CHECK: Prevents the "Cannot read properties of undefined" error
+            if (data && data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+                const text = data.candidates[0].content.parts[0].text;
+                display.innerText = text;
+            } else {
+                console.error("AI Error:", data);
+                display.innerText = "AI Error: Received an empty or blocked response. Check your Vercel logs and API key.";
+            }
+
+        } catch (error) {
+            console.error("Connection Error:", error);
+            display.innerText = "Error: Could not connect to the server. Make sure you are running on Vercel or a local server.";
         }
     }
-
-    document.getElementById('predictBtn').addEventListener('click', () => {
-        callGemini("Based on this food waste data, suggest which 3 items should be ordered less next week and by what percentage. Be concise.");
-    });
-
-    document.getElementById('reportBtn').addEventListener('click', () => {
-        callGemini("Generate a formal impact report paragraph for a school board based on this data. Include total weight and an estimated carbon footprint.");
-    });
-
-    parseBtn.addEventListener('click', parseData);
-    document.getElementById('clearBtn').addEventListener('click', () => { location.reload(); });
-
-    // Sample data for quick testing
-    dataInput.value = "date,item,weight_lbs\n2026-02-01,Pizza,45\n2026-02-01,Salad,12\n2026-02-02,Meatloaf,38\n2026-02-02,Pizza,10";
 </script>
+
 </body>
 </html>
-
