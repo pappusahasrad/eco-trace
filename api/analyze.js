@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
     // 1. Vercel automatically grabs your secret key from the settings we talked about
     const apiKey = process.env.GEMINI_API_KEY;
-    const url = https:generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCGy_pbELwcXyxnvru0NbbIkzp7NRF-SsU
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     // 2. This prevents random people from messsing with your API
     if (req.method !== 'POST') {
@@ -24,4 +24,5 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'AI Kitchen Error: ' + error.message });
     }
 }
+
 
